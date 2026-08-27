@@ -1,0 +1,16 @@
+# Viral Content Agent — dependencies (all free)
+# Install with:  pip install -r requirements.txt
+edge-tts>=6.1.0        # free neural voiceover + word timings (no API key)
+requests>=2.31.0       # YouTube Data API + Pexels + Gemini (all via REST)
+python-dotenv>=1.0.0   # load API keys from .env
+PyYAML>=6.0            # read config.yaml
+Flask>=3.0             # local web dashboard (python run.py web)
+waitress>=3.0          # production WSGI server for Windows (pure-Python, no card)
+google-api-python-client>=2.100  # YouTube upload + stats (pure-Python, free)
+google-auth-oauthlib>=1.2        # desktop OAuth sign-in (InstalledAppFlow)
+google-auth>=2.30                # credential storage + token refresh
+# stdlib (no install): sqlite3 (persistence), logging (rotating file logs)
+
+# External binary required (NOT a pip package): ffmpeg + ffprobe must be on PATH.
+# Windows:  winget install --id=Gyan.FFmpeg -e
+# See README.md for details.

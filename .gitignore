@@ -1,0 +1,24 @@
+# secrets
+.env
+token.json
+client_secret.json
+*.db
+*.db-wal
+*.db-shm
+
+# durable state (real protection is the out-of-OneDrive state dir; this is belt-and-suspenders)
+secrets/
+logs/
+state/
+
+# generated content / caches
+data/
+output/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+Thumbs.db
+.DS_Store

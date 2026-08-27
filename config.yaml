@@ -1,0 +1,72 @@
+# ============================================================
+#  Viral Content Agent — configuration
+#  Edit freely. Every value has a safe built-in default,
+#  so a missing key will not crash the pipeline.
+# ============================================================
+
+niche: ""   # no default niche — point the studio at yours in Settings (the gear, top-right)
+
+# ---- Research: what to look for on YouTube -----------------
+search:
+  keywords: []             # set your niche's search terms in Settings
+  region: "US"
+  language: "en"
+  max_results: 25          # per keyword (search costs 100 quota units each)
+  published_within_days: 30 # only look at recent = "viral NOW"
+  min_views: 20000          # ignore low-view noise
+
+# ---- Voiceover (edge-tts, free) ----------------------------
+voice:
+  name: "en-US-ChristopherNeural"  # clear, natural male narrator. Alternatives below.
+  rate: "+8%"                      # slightly faster = more energy
+  pitch: "+0Hz"
+  volume: "+0%"
+  # Other good free voices to try:
+  #   en-US-GuyNeural, en-US-EricNeural, en-US-BrianNeural (male)
+  #   en-US-AriaNeural, en-US-JennyNeural (female)
+
+# ---- Video output ------------------------------------------
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  min_seconds: 30    # hard minimum (your requirement)
+  max_seconds: 60
+  tail_seconds: 1.2  # brief hold after the last word
+
+# ---- Captions (burned in, TikTok style) --------------------
+captions:
+  font_name: "Arial"      # a font installed on your system. "Impact" / "Arial Black" hit harder.
+  bold: true
+  fontsize: 92
+  primary_color: "#FFFFFF"   # normal words
+  highlight_color: "#FFD400" # the word being spoken
+  outline_color: "#000000"
+  outline: 6
+  shadow: 2
+  max_words: 3            # words shown on screen at once
+  position: 0.72         # vertical center of caption, 0=top 1=bottom
+
+# ---- B-roll (Pexels, free) ---------------------------------
+pexels:
+  orientation: "portrait"
+  per_page: 8
+  min_clip_seconds: 3
+
+# ---- Background music (optional; you supply the file) ------
+music:
+  enabled: false
+  path: ""               # e.g. "assets/music/uplifting.mp3" (use royalty-free only)
+  volume: 0.12
+
+# ---- LLM (idea + script generation) ------------------------
+llm:
+  provider: "gemini"     # "gemini" (free) or "fallback" (built-in script bank, no key)
+  model: "gemini-2.5-flash"   # gemini-2.0-flash was retired -> 404s -> silent fallback to the canned bank
+  temperature: 0.95
+
+# ---- Folders -----------------------------------------------
+paths:
+  data: "data"
+  output: "output"
+  broll_cache: "data/broll"
