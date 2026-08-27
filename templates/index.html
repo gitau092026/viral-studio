@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Viral Content Studio</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="glyph"><i></i></span>
+      <div>
+        <h1>Viral <b>Studio</b></h1>
+        <span class="tag" id="niche-tag">co-pilot</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="gear" id="btn-settings" title="Settings — niche, keywords, voice" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- hero = the signature: a live 3D "signal field" of view-velocity -->
+  <section class="hero" aria-label="Viral Content Studio">
+    <canvas id="signal-field" aria-hidden="true"></canvas>
+    <div class="hero-scrim" aria-hidden="true"></div>
+    <div class="hero-grain" aria-hidden="true"></div>
+    <div class="hero-live" aria-hidden="true"><span class="pulse"></span>Live signal · view-velocity</div>
+    <div class="hero-inner">
+      <span class="eyebrow">Faceless Shorts co-pilot</span>
+      <h2>Catch the <span class="grad">signal</span>,<br>ship something original.</h2>
+      <p>Rank what's climbing right now by view-velocity — views per day, not raw totals — then build your own take on it. A human review gate stands between every draft and publish.</p>
+      <div class="hero-cta">
+        <button class="btn" data-goto="research"><span>Scan what's breaking out</span></button>
+        <button class="btn ghost" data-goto="create"><span>Create a draft</span></button>
+      </div>
+      <div class="hero-trust">
+        <span><b>$0 stack</b></span><span class="sep"></span>
+        <span><b>Human review gate</b></span><span class="sep"></span>
+        <span><b>Original by design</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- pipeline rail = the workflow, and the nav -->
+  <span class="rail-label">The pipeline</span>
+  <nav class="rail" id="rail">
+    <button class="stage active" data-stage="research"><span class="node"><span>01</span></span><span class="lab">Research</span></button>
+    <button class="stage" data-stage="ideas"><span class="node"><span>02</span></span><span class="lab">Ideas</span></button>
+    <button class="stage" data-stage="create"><span class="node"><span>03</span></span><span class="lab">Create</span></button>
+    <button class="stage" data-stage="review"><span class="node"><span>04</span></span><span class="lab">Review</span></button>
+    <button class="stage" data-stage="publish"><span class="node"><span>05</span></span><span class="lab">Publish</span></button>
+  </nav>
+
+  <!-- 01 · RESEARCH -->
+  <section class="stage-panel active" data-panel="research">
+    <div class="head">
+      <span class="eyebrow">Stage 01 — Signal</span>
+      <h2>See what's actually breaking out</h2>
+      <p>Rank recent <span id="niche-word">your niche</span> Shorts by view-velocity — views per day, not raw totals — so you study what's climbing <i>now</i>. Then build something original in that lane.</p>
+    </div>
+    <div style="margin-bottom:22px; display:flex; gap:12px; align-items:center;">
+      <button class="btn" id="btn-research"><span>Scan YouTube</span></button>
+      <span class="hint" id="research-when"></span>
+    </div>
+    <div id="research-body"></div>
+  </section>
+
+  <!-- 02 · IDEAS -->
+  <section class="stage-panel" data-panel="ideas">
+    <div class="head">
+      <span class="eyebrow">Stage 02 — Concepts</span>
+      <h2>Turn signal into original angles</h2>
+      <p>Give the co-pilot a direction — or leave it blank to work straight from your trend scan. Either way you get fresh takes, never copies: each concept carries a one-second hook and a reason it's different, so it stays inside YouTube's originality rules.</p>
+    </div>
+    <div class="card topic-box" style="margin-bottom:16px;">
+      <label for="ideas-brief">Steer the concepts — optional</label>
+      <textarea id="ideas-brief" placeholder="A theme, sub-topic, audience, or angle to lean into. Leave blank to work from your trend scan."></textarea>
+    </div>
+    <div style="margin-bottom:22px; display:flex; gap:12px; align-items:center;">
+      <button class="btn" id="btn-ideas"><span>Generate concepts</span></button>
+      <span class="hint" id="ideas-when"></span>
+    </div>
+    <div id="ideas-hint" style="display:none; margin-bottom:22px;"></div>
+    <div id="ideas-body"></div>
+  </section>
+
+  <!-- 03 · CREATE -->
+  <section class="stage-panel" data-panel="create">
+    <div class="head">
+      <span class="eyebrow">Stage 03 — Render</span>
+      <h2>Draft the video</h2>
+      <p>Script → voiceover → b-roll → synced captions → a vertical Shorts cut. Pick a style, resolution, and length, then render once — ready for Shorts, TikTok, and Reels.</p>
+    </div>
+    <div class="create-grid">
+      <div class="card topic-box">
+        <div class="picked" id="picked"><span id="picked-txt"></span><button class="x" id="picked-x">×</button></div>
+        <label for="topic">What should this video be about? — in your own words</label>
+        <textarea id="topic" placeholder="e.g. how to start investing with $100 as a college student"></textarea>
+        <div id="render-options"></div>
+        <div class="make-actions">
+          <button class="btn go" id="btn-compose"><span>Research &amp; write a prompt</span></button>
+          <button class="btn ghost" id="btn-make"><span>Render draft</span></button>
+        </div>
+        <p class="hint"><b>Research</b> reads live YouTube trends on your idea, then drafts an editable prompt you approve before writing the script. Or skip straight to <b>Render draft</b>. Each step ~1 min.</p>
+
+        <!-- Step 2 — the researched, editable concept (revealed after Research) -->
+        <div id="concept" class="concept" style="display:none;">
+          <div class="concept-head">
+            <span class="section-label" style="margin:0;">Your researched concept</span>
+            <span class="pill-badge" id="concept-badge"></span>
+          </div>
+          <div id="concept-warning" class="concept-warning" style="display:none;"></div>
+          <div class="kw-wrap">
+            <span class="kw-label">Keywords researched</span>
+            <div class="kw-chips" id="concept-kws"></div>
+          </div>
+          <div class="trend-brief" id="concept-trends"></div>
+          <label for="concept-prompt" style="margin-top:18px;">The creative prompt — edit anything before you draft</label>
+          <textarea id="concept-prompt" placeholder="Your synthesized prompt appears here…"></textarea>
+          <button class="btn go" id="btn-draft" style="margin-top:12px;"><span>Write the draft →</span></button>
+          <p class="hint">This prompt drives the script. Study the trends for what works — then keep the writing original.</p>
+        </div>
+      </div>
+      <div class="bay" id="bay">
+        <div class="bay-top"><span class="t">Render bay</span><span class="tc" id="tc">00:00</span></div>
+        <div class="bay-empty" id="bay-empty">
+          <div class="big">Idle</div>
+          <div>Your render steps will stream here.</div>
+        </div>
+        <div class="steps" id="steps" style="display:none;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 · REVIEW -->
+  <section class="stage-panel" data-panel="review">
+    <div class="head">
+      <span class="eyebrow">Stage 04 — Your call</span>
+      <h2>Review before anything ships</h2>
+      <p>This is the gate that keeps the channel monetizable. Watch it, read it, make it yours — then approve.</p>
+    </div>
+    <div id="review-body"></div>
+  </section>
+
+  <!-- 05 · PUBLISH -->
+  <section class="stage-panel" data-panel="publish">
+    <div class="head">
+      <span class="eyebrow">Stage 05 — Ship</span>
+      <h2>Upload, schedule, or copy</h2>
+      <p>Approve a draft in Review to unlock this stage. Upload straight to YouTube — default is Private + a scheduled go-public time so it works with your PC off — or copy the platform captions and post by hand.</p>
+    </div>
+    <div id="yt-conn" class="yt-conn"></div>
+    <div id="publish-body"></div>
+    <div id="schedule-card" class="pub-card"></div>
+    <div id="analytics-card" class="pub-card"></div>
+  </section>
+
+</div>
+
+<!-- settings modal (niche / keywords / voice) — the app's first dialog -->
+<div class="modal-backdrop" id="settings-backdrop">
+  <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal-head">
+      <h3 id="settings-title">Studio settings</h3>
+      <button class="x" id="settings-close" aria-label="Close settings">×</button>
+    </div>
+    <p class="modal-sub">Point the co-pilot at any niche. Saving applies immediately and clears stale trends so you re-scan fresh.</p>
+
+    <label class="fld">
+      <span class="fld-label">Niche</span>
+      <input type="text" id="set-niche" maxlength="80" autocomplete="off"
+             placeholder="e.g. personal finance, home cooking, indie game dev">
+    </label>
+
+    <label class="fld">
+      <span class="fld-label">Search keywords <span class="fld-hint">comma-separated · 1–12</span></span>
+      <input type="text" id="set-keywords" autocomplete="off"
+             placeholder="budgeting, index funds, frugal living, debt payoff">
+    </label>
+
+    <div class="fld">
+      <span class="fld-label">Voiceover <span class="fld-hint">edge-tts · free · preview before you render</span></span>
+      <div class="voice-row">
+        <select id="set-voice"></select>
+        <button type="button" class="btn ghost sm voice-preview" id="btn-voice-preview"
+                title="Hear a short sample of this voice">
+          <span class="vp-icon">▶</span><span class="vp-label">Preview</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-hint" id="set-gemini-hint" style="display:none;">
+      <span>💡</span>
+      <span>Add a free <b>Gemini</b> API key for scripts &amp; ideas tailored to any niche. Without one, drafts fall back to a generic on-topic scaffold you'll want to edit.</span>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn ghost" id="settings-cancel">Cancel</button>
+      <button class="btn go" id="settings-save"><span>Save &amp; apply</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="/static/app.js"></script>
+<script type="module" src="/static/hero.js"></script>
+</body>
+</html>

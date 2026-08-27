@@ -1,4 +1,12 @@
-"""Durable local state (SQLite, stdlib only)."""
+"""Durable local state (SQLite, stdlib only).
+
+One shared connection guarded by a write lock — correct and more than fast
+enough for a single-process, single-user local tool. Tables: jobs, videos
+(with the persisted review gate), schedule (also the upload record), analytics.
+
+The DB lives OUTSIDE the OneDrive project dir (see settings.load_config) so it
+never syncs to the cloud.
+"""
 from __future__ import annotations
 
 import json
@@ -65,6 +73,7 @@ _LOCK = threading.Lock()
 
 
 def init_db(cfg: dict) -> None:
+    """Idempotent — safe to call from both app startup and CLI commands."""
     global _CONN
     with _LOCK:
         if _CONN is not None:
@@ -80,6 +89,11 @@ def init_db(cfg: dict) -> None:
 
 
 def _migrate(conn: sqlite3.Connection) -> None:
+    """Add columns to pre-existing tables (CREATE TABLE IF NOT EXISTS won't).
+
+    Idempotent: only ALTERs columns that are missing, so existing rows (incl.
+    the persisted review gate) are preserved across upgrades.
+    """
     have = {r["name"] for r in conn.execute("PRAGMA table_info(videos)")}
     for col, decl in (("style", "TEXT"), ("width", "INTEGER"), ("height", "INTEGER")):
         if col not in have:
@@ -108,6 +122,7 @@ def _all(sql: str, params: tuple = ()):
         return _conn().execute(sql, params).fetchall()
 
 
+# ---- jobs -------------------------------------------------------------------
 def create_job(jid: str, kind: str, topic: str | None = None) -> None:
     _exec("INSERT OR REPLACE INTO jobs (id,kind,status,topic,started_at) VALUES (?,?,?,?,?)",
           (jid, kind, "running", topic, time.time()))
@@ -127,10 +142,13 @@ def list_jobs(limit: int = 100) -> list[dict]:
     return [dict(r) for r in _all("SELECT * FROM jobs ORDER BY started_at DESC LIMIT ?", (limit,))]
 
 
+# ---- videos -----------------------------------------------------------------
 def upsert_video(file: str, title: str | None = None, topic: str | None = None,
                  duration_s: int | None = None, created_at: float | None = None,
                  style: str | None = None, width: int | None = None,
                  height: int | None = None) -> None:
+    # ON CONFLICT preserves the review columns so a re-render never wipes approval.
+    # COALESCE on style/width/height keeps a known look if a later upsert omits it.
     _exec(
         """INSERT INTO videos (file,title,topic,duration_s,created_at,style,width,height)
            VALUES (?,?,?,?,?,?,?,?)
@@ -153,10 +171,13 @@ def list_videos() -> list[dict]:
 
 
 def delete_video(file: str) -> None:
+    """Remove a draft's rows. Caller deletes the files; caller must also refuse
+    deletion of anything already uploaded (schedule row with a youtube_id)."""
     _exec("DELETE FROM schedule WHERE file=?", (file,))
     _exec("DELETE FROM videos WHERE file=?", (file,))
 
 
+# ---- review gate (persisted, authoritative) ---------------------------------
 def set_review(file: str, checks, approved: bool) -> None:
     _exec("INSERT OR IGNORE INTO videos (file, created_at) VALUES (?,?)", (file, time.time()))
     _exec("UPDATE videos SET review_json=?, approved=?, approved_at=? WHERE file=?",
@@ -172,6 +193,7 @@ def get_review(file: str) -> dict:
     return {"checks": checks, "approved": bool(row["approved"]), "approved_at": row["approved_at"]}
 
 
+# ---- schedule / upload record -----------------------------------------------
 def create_or_update_schedule(file: str, scheduled_for: str | None = None, status: str = "draft",
                               youtube_id: str | None = None, privacy: str | None = None,
                               url: str | None = None, error: str | None = None) -> None:
@@ -209,10 +231,12 @@ def get_schedule_for(file: str) -> dict | None:
 
 
 def uploaded_video_ids() -> list[tuple[str, str]]:
+    """[(youtube_id, file)] for everything we've uploaded — drives analytics refresh."""
     return [(r["youtube_id"], r["file"])
             for r in _all("SELECT youtube_id, file FROM schedule WHERE youtube_id IS NOT NULL")]
 
 
+# ---- analytics --------------------------------------------------------------
 def insert_analytics(youtube_id: str, file: str | None, views: int, likes: int,
                      comments: int, captured_at: float | None = None) -> None:
     _exec(
@@ -223,6 +247,7 @@ def insert_analytics(youtube_id: str, file: str | None, views: int, likes: int,
 
 
 def leaderboard() -> list[dict]:
+    """Latest snapshot per video, richest first, with derived views/day."""
     rows = _all(
         """SELECT a.youtube_id, a.file, a.views, a.likes, a.comments, a.captured_at,
                   v.title, v.topic, v.created_at

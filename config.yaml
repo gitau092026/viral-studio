@@ -4,17 +4,11 @@
 #  so a missing key will not crash the pipeline.
 # ============================================================
 
-niche: "motivation / self-improvement"
+niche: ""   # no default niche — point the studio at yours in Settings (the gear, top-right)
 
 # ---- Research: what to look for on YouTube -----------------
 search:
-  keywords:
-    - "motivation"
-    - "discipline"
-    - "self improvement"
-    - "stoicism"
-    - "mindset"
-    - "success habits"
+  keywords: []             # set your niche's search terms in Settings
   region: "US"
   language: "en"
   max_results: 25          # per keyword (search costs 100 quota units each)
@@ -23,7 +17,7 @@ search:
 
 # ---- Voiceover (edge-tts, free) ----------------------------
 voice:
-  name: "en-US-ChristopherNeural"  # deep, motivational. Alternatives below.
+  name: "en-US-ChristopherNeural"  # clear, natural male narrator. Alternatives below.
   rate: "+8%"                      # slightly faster = more energy
   pitch: "+0Hz"
   volume: "+0%"

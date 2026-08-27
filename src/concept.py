@@ -1,4 +1,11 @@
-"""The generation chain: user input -> keywords -> live research -> synthesized prompt."""
+"""The generation chain: user input -> keywords -> live research -> synthesized prompt.
+
+Turns a plain-language brief into (a) focused search keywords, (b) a live YouTube
+trend read on those keywords, and (c) an ORIGINAL, editable creative prompt the user
+tweaks before the script is written. Every LLM step degrades to a transparent
+built-in fallback, and the result records whether Gemini or a template produced it,
+so the user always knows how a draft was made.
+"""
 from __future__ import annotations
 
 import re
@@ -9,6 +16,7 @@ from .settings import niche_tag
 
 
 def _keywords_from_text(text: str, niche: str, limit: int = 6) -> list[str]:
+    """No-LLM fallback: pull salient words from the brief (then the niche)."""
     seen: set[str] = set()
     out: list[str] = []
     for source in (text or "", niche or ""):
@@ -20,6 +28,7 @@ def _keywords_from_text(text: str, niche: str, limit: int = 6) -> list[str]:
 
 
 def derive_keywords(cfg: dict, user_input: str) -> dict:
+    """Turn the creator's brief into concrete YouTube search phrases + framing."""
     niche = cfg.get("niche") or "content"
     ui = (user_input or "").strip()
     if llm.available():
@@ -54,6 +63,7 @@ def derive_keywords(cfg: dict, user_input: str) -> dict:
 
 
 def _research_digest(report: dict | None) -> dict:
+    """Compact, model- and UI-friendly summary of a scan report."""
     if not report:
         return {"title_words": [], "hashtags": [], "median_duration_s": 0, "top_titles": [], "sample_size": 0}
     p = report.get("patterns", {}) or {}
@@ -68,6 +78,7 @@ def _research_digest(report: dict | None) -> dict:
 
 
 def _template_brief(niche: str, ui: str, derived: dict, target: int) -> dict:
+    """No-LLM fallback brief — a clearly-labeled scaffold to edit, never canned motivation."""
     kws = derived.get("keywords", [])
     tag = niche_tag(niche)
     pool = ([tag] if tag else []) + ["#shorts", "#tips"]
@@ -93,6 +104,7 @@ def _template_brief(niche: str, ui: str, derived: dict, target: int) -> dict:
 
 
 def synthesize_prompt(cfg: dict, user_input: str, derived: dict, report: dict | None) -> dict:
+    """Combine the brief + derived keywords + live trend signal into an ORIGINAL, editable prompt."""
     niche = cfg.get("niche") or "content"
     ui = (user_input or "").strip()
     dg = _research_digest(report)
@@ -118,8 +130,9 @@ def synthesize_prompt(cfg: dict, user_input: str, derived: dict, report: dict | 
             '"avoid": ["what NOT to do - cliches / anything that copies the examples"], '
             '"hashtag_pool": ["6-8 relevant tags"], '
             f'"target_seconds": {target}, '
-            '"prompt_text": "a tight paragraph the scriptwriter will follow"}\n'
-            "prompt_text must be self-contained and ORIGINAL."
+            '"prompt_text": "a tight paragraph the scriptwriter will follow: the original angle, who it is for, '
+            'the payoff, and the vibe"}\n'
+            "prompt_text must be self-contained and ORIGINAL. Never instruct to copy any example title or phrasing."
         )
         try:
             data = llm.generate_json(
@@ -131,6 +144,13 @@ def synthesize_prompt(cfg: dict, user_input: str, derived: dict, report: dict | 
                 for k in ("structure", "key_points", "avoid", "hashtag_pool"):
                     data[k] = [str(x).strip() for x in (data.get(k) or []) if str(x).strip()]
                 data["working_title"] = str(data.get("working_title") or (ui[:60] or niche)).strip()
+                data["hook_angle"] = str(data.get("hook_angle") or "").strip()
+                data["tone"] = str(data.get("tone") or "").strip()
+                data["prompt_text"] = str(data.get("prompt_text") or "").strip()
+                try:
+                    data["target_seconds"] = int(data.get("target_seconds") or target)
+                except (TypeError, ValueError):
+                    data["target_seconds"] = target
                 data["used_llm"] = True
                 return data
         except Exception as e:
@@ -139,6 +159,11 @@ def synthesize_prompt(cfg: dict, user_input: str, derived: dict, report: dict | 
 
 
 def research_and_synthesize(cfg: dict, user_input: str, on_step=None) -> dict:
+    """Full step-1 chain: derive keywords -> live research -> synthesize an editable prompt.
+
+    Never raises for a research failure: it records a warning and synthesizes from AI
+    knowledge instead, so the user is never stuck at the checkpoint.
+    """
     def step(key: str, label: str):
         if on_step:
             on_step(key, label)

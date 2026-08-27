@@ -1,4 +1,9 @@
-"""Assemble the final vertical video with ffmpeg: b-roll + narration + burned-in captions."""
+"""Assemble the final vertical video with ffmpeg: b-roll + narration + burned-in captions.
+
+Strategy (most robust on Windows): normalize each b-roll clip to a fixed
+1080x1920/30fps segment of its beat duration, concat them, then mux narration and
+burn the ASS captions in a single pass. Optional background music is mixed under.
+"""
 from __future__ import annotations
 
 import shutil
@@ -14,8 +19,9 @@ def compute_beat_durations(beats: list[dict], narration_dur: float, cfg: dict) -
     weights = [max(len(b.get("text", "")), 1) for b in beats]
     total = sum(weights) or 1
     durs = [target * w / total for w in weights]
+    # make the sum exact by absorbing rounding into the last beat
     durs[-1] = max(target - sum(durs[:-1]), 1.0)
-    if durs[-1] <= 0.5:
+    if durs[-1] <= 0.5:  # pathological: split evenly
         durs = [target / len(beats)] * len(beats)
     return durs, target
 
@@ -31,6 +37,7 @@ def assemble_video(cfg: dict, broll_paths: list[str], beats: list[dict], narrati
 
     tmp = Path(tempfile.mkdtemp(prefix="vca_", dir=cfg["paths"]["data"]))
     try:
+        # 1) normalize each beat clip to exact duration + canonical format
         concat_lines = []
         for i, (src, dur) in enumerate(zip(broll_paths, durs)):
             seg = tmp / f"beat_{i:03d}.mp4"

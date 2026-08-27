@@ -55,6 +55,11 @@ _SETTINGS_FILE = "settings.json"
 
 
 def _sanitize_overlay(raw: dict) -> dict:
+    """Whitelist the user-writable overlay to niche / search.keywords / voice.name.
+
+    A hand-edited settings.json must never be able to redirect paths, secrets, or
+    the DB location — only these three content keys are honoured.
+    """
     out: dict = {}
     if isinstance(raw, dict):
         if isinstance(raw.get("niche"), str):
@@ -86,17 +91,24 @@ def load_config(path: str | None = None) -> dict:
         with open(p, "r", encoding="utf-8") as f:
             user = yaml.safe_load(f) or {}
         _deep_merge(cfg, user)
+    # resolve + create folders
     for key, rel in cfg["paths"].items():
         abs_path = (ROOT / rel).resolve()
         abs_path.mkdir(parents=True, exist_ok=True)
         cfg["paths"][key] = str(abs_path)
 
+    # Durable state (SQLite DB, logs, OAuth secrets) must live OUTSIDE the project
+    # dir: the project is inside OneDrive, which syncs to the cloud, and tokens /
+    # client secrets / the DB must never sync. LOCALAPPDATA does not roam/sync.
     override = os.getenv("VIRAL_STATE_DIR") or cfg.get("state_dir")
     if override:
         state = Path(os.path.abspath(os.path.expanduser(str(override))))
     else:
         local = os.getenv("LOCALAPPDATA")
         base = (Path(local) / "ViralContent") if local else (Path.home() / ".viral-content")
+        # abspath (not resolve): Microsoft Store Python redirects AppData\Local via a
+        # reparse point that resolve() only follows once the dir exists, which would make
+        # the path flip between sessions. abspath normalizes without following it.
         state = Path(os.path.abspath(base))
     for sub in ("", "logs", "secrets"):
         (state / sub).mkdir(parents=True, exist_ok=True)
@@ -105,6 +117,9 @@ def load_config(path: str | None = None) -> dict:
     cfg["paths"]["secrets"] = str(state / "secrets")
     cfg["db_path"] = str(state / "app.db")
 
+    # User settings overlay (niche / keywords / voice) written from the dashboard.
+    # Highest precedence — beats config.yaml and DEFAULTS. Whitelisted (above) so it
+    # can never redirect paths, secrets, or the DB location.
     _deep_merge(cfg, _sanitize_overlay(_read_overlay(state)))
     return cfg
 
@@ -121,11 +136,18 @@ def slugify(text: str, max_len: int = 50) -> str:
 
 
 def niche_tag(niche: str | None) -> str:
+    """A safe single hashtag from a niche name: 'personal finance' -> '#personalfinance'. '' if empty."""
     s = re.sub(r"[^a-z0-9]", "", (niche or "").lower())
     return f"#{s}" if s else ""
 
 
 def save_user_settings(cfg: dict, updates: dict) -> dict:
+    """Merge validated updates into the on-disk settings overlay (atomic write).
+
+    Returns the sanitized overlay that was written. Only niche / search.keywords /
+    voice.name are ever persisted (see _sanitize_overlay). The overlay lives in the
+    out-of-OneDrive state dir alongside the DB.
+    """
     state_dir = Path(cfg["paths"]["state"])
     merged = _deep_merge(_sanitize_overlay(_read_overlay(state_dir)), _sanitize_overlay(updates))
     path = state_dir / _SETTINGS_FILE

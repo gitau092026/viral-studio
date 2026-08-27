@@ -24,6 +24,7 @@ def make_video(cfg: dict, topic: str | None = None, verbose: bool = True, on_ste
             print(msg)
 
     def step(key: str, label: str):
+        """Emit a machine-readable step for UIs, plus the human line for the CLI."""
         say(f"  - {label}")
         if on_step:
             on_step(key, label)
@@ -54,6 +55,7 @@ def make_video(cfg: dict, topic: str | None = None, verbose: bool = True, on_ste
     step("assemble", "Assembling video with ffmpeg (this is the slow step)...")
     info = assemble.assemble_video(cfg, broll, beats, narration_mp3, ass_text, str(out_mp4))
 
+    # thumbnail + review artifacts
     stem = out_mp4.with_suffix("")
     thumb = str(stem) + ".thumb.jpg"
     try:
@@ -74,6 +76,9 @@ def make_video(cfg: dict, topic: str | None = None, verbose: bool = True, on_ste
         encoding="utf-8",
     )
 
+    # Provenance sidecar: how this draft was made (keywords, live research, the
+    # synthesized brief, and whether Gemini or a template wrote it). Powers the
+    # Review "how it was made" trace + the AI-vs-template badge.
     if brief_meta is not None:
         payload = dict(brief_meta)
         payload["generator"] = scr.get("generator")

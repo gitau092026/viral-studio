@@ -43,7 +43,7 @@ def _search_ids(key: str, keyword: str, cfg: dict) -> list[str]:
         "key": key, "part": "snippet", "q": keyword, "type": "video",
         "order": "viewCount", "maxResults": min(s["max_results"], 50),
         "publishedAfter": published_after, "regionCode": s["region"],
-        "relevanceLanguage": s["language"], "videoDuration": "short",
+        "relevanceLanguage": s["language"], "videoDuration": "short",  # < 4 min
     }
     r = requests.get(_SEARCH, params=params, timeout=30)
     r.raise_for_status()
@@ -64,7 +64,12 @@ def _video_details(key: str, ids: list[str]) -> list[dict]:
     return out
 
 
-def run_research(cfg: dict) -> dict:
+def _scan(cfg: dict, keywords: list[str]) -> dict:
+    """Search YouTube for the given keywords and rank the results by view-velocity.
+
+    Pure scan — builds the report but writes no files, so it can be reused by both
+    the Stage-01 trend scan and the per-video generation chain.
+    """
     key = env("YOUTUBE_API_KEY")
     if not key:
         raise RuntimeError(
@@ -73,7 +78,7 @@ def run_research(cfg: dict) -> dict:
 
     seen: dict[str, dict] = {}
     now = datetime.now(timezone.utc)
-    for kw in cfg["search"]["keywords"]:
+    for kw in keywords:
         try:
             ids = _search_ids(key, kw, cfg)
         except requests.HTTPError as e:
@@ -91,11 +96,15 @@ def run_research(cfg: dict) -> dict:
             dur = _iso_duration_to_seconds(cd.get("duration", ""))
             title = snip.get("title", "")
             desc = snip.get("description", "")
+            thumbs = snip.get("thumbnails", {}) or {}
+            thumb = (thumbs.get("medium") or thumbs.get("high")
+                     or thumbs.get("standard") or thumbs.get("default") or {}).get("url", "")
             seen[vid] = {
                 "id": vid,
                 "url": f"https://youtube.com/watch?v={vid}",
                 "title": title,
                 "channel": snip.get("channelTitle", ""),
+                "thumbnail": thumb,
                 "views": views,
                 "likes": int(stats.get("likeCount", 0)),
                 "comments": int(stats.get("commentCount", 0)),
@@ -109,20 +118,30 @@ def run_research(cfg: dict) -> dict:
 
     videos = sorted(seen.values(), key=lambda x: x["views_per_day"], reverse=True)
     patterns = _extract_patterns(videos)
-    report = {"generated_at": now.isoformat(), "niche": cfg["niche"], "videos": videos, "patterns": patterns}
+    return {"generated_at": now.isoformat(), "niche": cfg["niche"], "videos": videos, "patterns": patterns}
 
+
+def run_research(cfg: dict) -> dict:
+    """Stage-01 trend scan over the configured keywords; persists trends.json + report."""
+    report = _scan(cfg, cfg["search"]["keywords"])
     data_dir = Path(cfg["paths"]["data"])
     (data_dir / "trends.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     (data_dir / "trend_report.md").write_text(_render_markdown(report), encoding="utf-8")
     return report
 
 
-def research_keywords(cfg: dict, keywords: list[str]) -> dict:
-    """Research specific keywords (used by the generation chain)."""
-    import copy
-    cfg2 = copy.deepcopy(cfg)
-    cfg2["search"]["keywords"] = keywords
-    return run_research(cfg2)
+def research_keywords(cfg: dict, keywords: list[str], *, max_keywords: int = 6) -> dict:
+    """Scan the DERIVED keywords for the generation chain.
+
+    Caps the keyword count to stay well inside the free YouTube quota (~100 units
+    each). Deliberately does NOT write trends.json / trend_report.md, so a per-video
+    render never clobbers a manual Stage-01 scan. Raises on a hard API failure; the
+    caller degrades gracefully.
+    """
+    kws = [k.strip() for k in (keywords or []) if isinstance(k, str) and k.strip()][:max_keywords]
+    if not kws:
+        kws = cfg["search"]["keywords"][:max_keywords]
+    return _scan(cfg, kws)
 
 
 def _extract_patterns(videos: list[dict]) -> dict:

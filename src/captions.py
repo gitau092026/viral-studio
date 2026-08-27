@@ -1,8 +1,13 @@
-"""Build TikTok-style burned-in captions as an ASS subtitle file from word timings."""
+"""Build TikTok-style burned-in captions as an ASS subtitle file from word timings.
+
+Pure string generation (no rendering libs) — ffmpeg's `ass` filter burns it in.
+The active word is highlighted; a small rolling window of words is shown.
+"""
 from __future__ import annotations
 
 
 def _hex_to_ass(color: str) -> str:
+    """#RRGGBB -> &H00BBGGRR (ASS is BGR with an alpha byte; 00 = opaque)."""
     c = color.lstrip("#")
     if len(c) != 6:
         c = "FFFFFF"
@@ -16,13 +21,18 @@ def _t(seconds: float) -> str:
     m = int((seconds % 3600) // 60)
     s = int(seconds % 60)
     cs = int(round((seconds - int(seconds)) * 100))
-    if cs >= 100:
+    if cs >= 100:  # rounding guard
         s += 1
         cs = 0
     return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
 
 
 def build_groups(words: list[dict], max_words: int) -> list[list[dict]]:
+    """Chunk consecutive words into caption groups of up to max_words.
+
+    If words carry a 'sent' (sentence index), a new group starts at each sentence
+    boundary so a caption line never spans two sentences.
+    """
     max_words = max(max_words, 1)
     groups: list[list[dict]] = []
     current: list[dict] = []
@@ -79,6 +89,7 @@ def to_ass(words: list[dict], cfg: dict) -> str:
             end = group[i + 1]["start"] if i + 1 < len(group) else group_end
             if end <= start:
                 end = start + 0.12
+            # render the whole group, highlighting the active word
             parts = []
             for j, gw in enumerate(group):
                 token = gw["text"]

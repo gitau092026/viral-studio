@@ -8,6 +8,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+# Common Windows install locations to check when ffmpeg isn't already on PATH
+# (winget drops it under LOCALAPPDATA and doesn't update the current shell's PATH).
 _WIN_GLOBS = [
     os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\Gyan.FFmpeg*\**\bin"),
     os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\WinGet\Packages\BtbN.FFmpeg*\**\bin"),
@@ -17,6 +19,7 @@ _WIN_GLOBS = [
 
 
 def ensure_on_path() -> bool:
+    """Best-effort: if ffmpeg isn't on PATH, find a known install and add it. Idempotent."""
     if shutil.which("ffmpeg") and shutil.which("ffprobe"):
         return True
     for pattern in _WIN_GLOBS:
@@ -42,6 +45,7 @@ def _require():
 
 
 def ff(args: list[str], cwd: str | None = None) -> None:
+    """Run ffmpeg with sane defaults. Raises RuntimeError with stderr tail on failure."""
     _require()
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error"] + args
     proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
@@ -65,6 +69,7 @@ def probe_duration(path: str) -> float:
 
 
 def make_color_clip(out_path: str, seconds: float, size: str = "1080x1920", color: str = "0x0B1220") -> str:
+    """Generate a solid-color fallback clip when no b-roll is available."""
     ff([
         "-f", "lavfi", "-i", f"color=c={color}:s={size}:d={max(seconds, 1):.2f}:r=30",
         "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(out_path),

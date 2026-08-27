@@ -119,15 +119,23 @@ SCRIPTS = [
     },
 ]
 
+
 _EXAMPLE_NICHE_TERMS = ("motivation", "self improvement", "self-improvement", "discipline", "mindset", "stoic")
 
 
 def is_example_niche(niche: str | None) -> bool:
+    """True when the niche is (close to) the built-in motivation example the SCRIPTS bank covers."""
     n = (niche or "").lower()
     return any(term in n for term in _EXAMPLE_NICHE_TERMS)
 
 
 def generic_script(topic: str | None, niche: str) -> dict:
+    """A neutral, on-topic scaffold for any niche when no LLM is available.
+
+    Deliberately generic — a starting point to EDIT, not to publish as-is. Add the
+    free Gemini key for scripts genuinely tailored to your niche and topic. This
+    exists so the no-key path never emits motivation content for an unrelated niche.
+    """
     niche = (niche or "content").strip()
     subject = (topic or niche).strip()
     q = f"cinematic {niche}"
@@ -147,6 +155,7 @@ def generic_script(topic: str | None, niche: str) -> dict:
 
 
 def fallback_ideas(niche: str | None, count: int) -> list[dict]:
+    """Concept seeds for the Ideas panel when no LLM is available."""
     if is_example_niche(niche):
         return [
             {"title": s["title"], "hook": s["beats"][0]["text"],
@@ -174,6 +183,11 @@ def fallback_ideas(niche: str | None, count: int) -> list[dict]:
 
 
 def pick(topic: str | None = None, niche: str | None = None):
+    """Return an on-topic script for this niche.
+
+    For the built-in motivation example niche, match the curated bank by keyword.
+    For any other niche, synthesize a generic on-topic scaffold (never motivation).
+    """
     if niche and not is_example_niche(niche):
         return generic_script(topic, niche)
     if not topic:
