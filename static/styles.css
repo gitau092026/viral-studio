@@ -62,11 +62,23 @@ body {
   text-rendering: optimizeLegibility;
   line-height: 1.5;
   min-height: 100vh;
+  overflow-x: clip;   /* lets the hero bleed full-width without a horizontal scrollbar */
 }
 
 .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px 72px; }
 
 ::selection { background: rgba(110,123,255,.32); color: #fff; }
+
+/* This is a metrics product — the whole app orbits one number, view-velocity.
+   So figures are tabular and slashed-zero everywhere they live: they align in
+   columns and never twitch in width as a value ticks up. Craft you feel, not see. */
+.tc, .stat .k, .tc-vpd b, .pager-info, .review-meta, .dc-meta, .hero-trust,
+.trend-table .num, .trend-table .vpd, .q-table .num, .q-table .vpd,
+.chip .n, .rk, .tc-rank, .tc-dur, .hero-live, .bay-top .tc,
+.gate-foot .status-txt, .tagpill, .pill-badge {
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
 
 /* ---- top bar (sticky glass) ----------------------------------------------*/
 .topbar {
@@ -108,19 +120,15 @@ body {
 /* ---- hero = the signal field (the signature) -----------------------------*/
 .hero {
   position: relative; isolation: isolate; overflow: hidden;
-  margin: 20px 0 30px; border-radius: var(--r-xl);
-  border: 1px solid var(--line-soft);
+  /* full-bleed: break out of the 1200px wrap to span the whole viewport */
+  width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+  margin-top: 0; margin-bottom: 40px; border-radius: 0;
+  border: 0;
   background:
-    radial-gradient(130% 150% at 92% 8%, rgba(63,224,218,.10), transparent 52%),
-    radial-gradient(90% 120% at 4% 100%, rgba(110,123,255,.10), transparent 55%),
-    linear-gradient(155deg, #10131c 0%, #0a0d13 58%, #07090f 100%);
-  box-shadow: var(--shadow);
-  min-height: 460px; display: flex; align-items: center;
-}
-.hero::after {   /* hairline top-edge highlight — reads as a lit control surface */
-  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  border-radius: inherit;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.015);
+    radial-gradient(120% 140% at 90% 6%, rgba(70,230,223,.07), transparent 50%),
+    linear-gradient(160deg, #0a0d13 0%, #070910 55%, #04060a 100%);
+  box-shadow: none;
+  min-height: calc(100vh - 72px); display: flex; align-items: center;
 }
 #signal-field {
   position: absolute; inset: 0; z-index: 0;
@@ -134,9 +142,9 @@ body {
     linear-gradient(97deg, var(--bg) 2%, rgba(9,11,16,.82) 30%, rgba(9,11,16,.28) 56%, transparent 78%),
     linear-gradient(0deg, rgba(6,8,13,.72), transparent 46%);
 }
-.hero-grain {          /* subtle vignette so edges sit inside the frame */
+.hero-grain {          /* soft vignette so edges melt into the page — no hard ring */
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  box-shadow: inset 0 0 140px 10px rgba(6,8,13,.6);
+  box-shadow: inset 0 0 150px 0 rgba(6,8,13,.5);
 }
 .hero-live {           /* live-signal readout — reinforces the control-surface identity */
   position: absolute; top: 20px; right: 22px; z-index: 3;
@@ -158,13 +166,16 @@ body {
 }
 .hero-inner {
   position: relative; z-index: 2;
-  padding: clamp(32px, 4.8vw, 64px); max-width: 600px;
+  /* align the copy with the page content edge once the hero goes full-bleed */
+  margin-left: max(0px, calc((100vw - var(--maxw)) / 2));
+  padding: clamp(40px, 6vw, 96px) 24px;
+  max-width: min(648px, 100%);
 }
 .hero .eyebrow { margin-bottom: 18px; }
 .hero h2 {
   font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(36px, 5.6vw, 64px); line-height: 1.0;
-  letter-spacing: -.035em; color: var(--text);
+  font-size: clamp(36px, 5.6vw, 64px); line-height: 1.04;
+  letter-spacing: -.035em; color: var(--text); text-wrap: balance;
 }
 .hero h2 .grad {
   background: linear-gradient(96deg, var(--accent) 6%, var(--accent-2) 94%);
@@ -172,7 +183,7 @@ body {
 }
 .hero p {
   color: var(--muted); font-size: clamp(15px, 1.6vw, 17px);
-  margin-top: 20px; max-width: 496px; line-height: 1.62;
+  margin-top: 20px; max-width: 496px; line-height: 1.62; text-wrap: pretty;
 }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
 .hero-trust {
@@ -193,7 +204,7 @@ body {
 }
 .rail {
   position: relative; display: grid; grid-template-columns: repeat(5, 1fr);
-  gap: 0; margin: 0 0 40px; padding: 24px 14px 22px;
+  gap: 0; margin: 0 0 40px; padding: 24px 14px 22px; scroll-margin-top: 80px;
   background:
     radial-gradient(120% 200% at 50% -40%, rgba(110,123,255,.06), transparent 60%),
     linear-gradient(180deg, var(--panel), rgba(18,21,29,.38));
@@ -252,6 +263,10 @@ body {
 .stage-panel.active { display: block; }
 @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
+/* One rhythm for every "primary action + inline status" row (research, ideas, …),
+   so the vertical spacing under a section header is identical across stages. */
+.stage-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+
 .head { margin-bottom: 24px; max-width: 660px; }
 .eyebrow {
   font-family: var(--font-mono); font-size: 11px; letter-spacing: .2em;
@@ -259,8 +274,8 @@ body {
   display: inline-flex; align-items: center; gap: 9px;
 }
 .eyebrow::before { content: ""; width: 22px; height: 1px; background: linear-gradient(90deg, var(--accent-2), transparent); }
-.head h2 { font-family: var(--font-display); font-size: clamp(24px, 3.4vw, 32px); font-weight: 600; letter-spacing: -.02em; line-height: 1.08; }
-.head p { color: var(--muted); margin-top: 10px; font-size: 15px; line-height: 1.6; }
+.head h2 { font-family: var(--font-display); font-size: clamp(24px, 3.4vw, 32px); font-weight: 600; letter-spacing: -.02em; line-height: 1.06; text-wrap: balance; }
+.head p { color: var(--muted); margin-top: 10px; font-size: 15px; line-height: 1.6; text-wrap: pretty; }
 
 .card {
   background: linear-gradient(180deg, var(--panel), rgba(18,21,29,.72));
@@ -401,7 +416,7 @@ body {
 }
 .idea:hover { transform: translateY(-3px); border-color: var(--line); box-shadow: var(--shadow-sm); }
 .idea:hover::before { opacity: 1; }
-.idea h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.25; }
+.idea h3 { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.25; text-wrap: balance; }
 .idea .hook { color: var(--text); font-size: 14px; font-style: italic; border-left: 2px solid var(--accent); padding-left: 12px; }
 .idea .angle { color: var(--muted); font-size: 13px; line-height: 1.55; }
 .idea .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 4px; }
@@ -526,7 +541,7 @@ body {
 .thumb .d { position: absolute; bottom: 4px; right: 4px; font-family: var(--font-mono); font-size: 9px; background: rgba(0,0,0,.7); padding: 1px 4px; border-radius: 4px; color: #fff; }
 .thumb .ok { position: absolute; top: 4px; left: 4px; width: 15px; height: 15px; border-radius: 50%; background: var(--live); color: #04140c; font-size: 10px; font-weight: 700; display: grid; place-items: center; box-shadow: 0 0 6px rgba(52,211,153,.6); }
 
-.review-title { font-family: var(--font-display); font-size: 21px; font-weight: 600; margin-bottom: 5px; letter-spacing: -.01em; }
+.review-title { font-family: var(--font-display); font-size: 21px; font-weight: 600; margin-bottom: 5px; letter-spacing: -.01em; text-wrap: balance; }
 .review-meta { font-family: var(--font-mono); font-size: 12px; color: var(--faint); margin-bottom: 18px; }
 .script-block { background: var(--bg-2); border: 1px solid var(--line-soft); border-radius: var(--r-sm); padding: 16px; font-size: 14px; color: var(--muted); white-space: pre-wrap; line-height: 1.65; max-height: 220px; overflow-y: auto; }
 

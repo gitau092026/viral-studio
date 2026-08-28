@@ -30,7 +30,6 @@
     <canvas id="signal-field" aria-hidden="true"></canvas>
     <div class="hero-scrim" aria-hidden="true"></div>
     <div class="hero-grain" aria-hidden="true"></div>
-    <div class="hero-live" aria-hidden="true"><span class="pulse"></span>Live signal · view-velocity</div>
     <div class="hero-inner">
       <span class="eyebrow">Faceless Shorts co-pilot</span>
       <h2>Catch the <span class="grad">signal</span>,<br>ship something original.</h2>
@@ -64,7 +63,7 @@
       <h2>See what's actually breaking out</h2>
       <p>Rank recent <span id="niche-word">your niche</span> Shorts by view-velocity — views per day, not raw totals — so you study what's climbing <i>now</i>. Then build something original in that lane.</p>
     </div>
-    <div style="margin-bottom:22px; display:flex; gap:12px; align-items:center;">
+    <div class="stage-actions">
       <button class="btn" id="btn-research"><span>Scan YouTube</span></button>
       <span class="hint" id="research-when"></span>
     </div>
@@ -82,7 +81,7 @@
       <label for="ideas-brief">Steer the concepts — optional</label>
       <textarea id="ideas-brief" placeholder="A theme, sub-topic, audience, or angle to lean into. Leave blank to work from your trend scan."></textarea>
     </div>
-    <div style="margin-bottom:22px; display:flex; gap:12px; align-items:center;">
+    <div class="stage-actions">
       <button class="btn" id="btn-ideas"><span>Generate concepts</span></button>
       <span class="hint" id="ideas-when"></span>
     </div>
@@ -208,6 +207,14 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 <script src="/static/app.js"></script>
 <script type="module" src="/static/hero.js"></script>
 </body>

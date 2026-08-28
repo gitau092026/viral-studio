@@ -50,7 +50,16 @@
       "Bash(curl -s http://127.0.0.1:5177/api/jobs/7307c04ce347)",
       "Bash(export PYTHONIOENCODING=utf-8)",
       "Bash(python -m py_compile app.py)",
-      "Bash(python -c \"import os,sys; from pathlib import Path; from src.settings import load_config; c=load_config\\(\\); print\\('secrets:',c['paths']['secrets']\\); print\\('exists:',os.path.isdir\\(c['paths']['secrets']\\)\\); print\\('python:',sys.executable\\)\")"
+      "Bash(python -c \"import os,sys; from pathlib import Path; from src.settings import load_config; c=load_config\\(\\); print\\('secrets:',c['paths']['secrets']\\); print\\('exists:',os.path.isdir\\(c['paths']['secrets']\\)\\); print\\('python:',sys.executable\\)\")",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git checkout *)",
+      "Bash(git stash *)",
+      "WebFetch(domain:www.openagentskill.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -fsSL \"https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/webgl_gpgpu_protoplanet.html\" -o /tmp/proto.html)",
+      "Read(//tmp/**)",
+      "Bash(curl -fsSL \"https://raw.githubusercontent.com/mrdoob/three.js/r160/examples/webgl_gpgpu_protoplanet.html\" -o ./_proto_tmp.html)"
     ]
   }
 }
